@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Eray Gündoğdu — Portfolio</title>
+  <meta name="description" content="Personal website of Eray Gündoğdu. Work Experience, Education, and Undergraduate Work." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="container nav-wrap">
+    <nav class="nav">
+      <a class="brand" href="#home"></a>
+      <div class="nav-links">
+        <a href="#workexp">Work Experience</a>
+        <a href="#education">Education</a>
+        <a href="#ugwork">Undergraduate Work</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="home" class="container hero">
+    <div class="hero-left">
+      <img src="assets/ERAY_GUNDOGDU.JPG" alt="Eray Gündoğdu portrait" class="avatar" onerror="this.style.display='none'">
+    </div>
+    <div class="hero-right">
+      <h1>Eray Gündoğdu</h1>
+      <p class="muted">
+        I am currently working as a Computer Vision Engineer at ROKETSAN, where I develop solutions in image processing, synthetic data generation, and real-time computer vision systems. I hold a B.Sc. degree in Electrical and Electronics Engineering, with a concentration in machine learning and signal processing. I am particularly passionate about advancing projects and deepening expertise in the fields of machine learning and signal processing.
+        
+      </p>
+      <ul class="contact">
+        <li>📧 <a href="mailto:eraygun03@gmail.com">eraygun03@gmail.com</a></li>
+        <li>🔗 <a href="https://www.linkedin.com/in/eray-gündoğdu-254263282/" target="_blank" rel="noopener">LinkedIn</a></li>
+      </ul>
+    </div>
+  </main>
+
+  <!-- Work Experience -->
+  <section id="workexp" class="container section">
+    <h2>Work Experience</h2>
+    <ul class="list">
+      <!-- NEW FULL-TIME ROLE (edit these placeholders) -->
+      <li>
+        <strong>Full-Time <em>Computer Vision Engineer</em>, ROKETSAN</strong> — </em> (Aug 2025 – Present)
+        
+      </li>
+
+      <!-- From resume -->
+      <li>
+        <strong>Part-Time Engineering Intern, ASELSAN</strong> — (Nov 2024 – July 2025)
+        <div class="muted">Worked on Linux and RTOS-based multithreaded embedded software development, focusing on task scheduling and system performance optimization across multiple peripheral interfaces.</div>
+      </li>
+      <li>
+        <strong>Engineering Intern, ROKETSAN</strong> — (Aug 1, 2024 – Sep 5, 2024)
+        <div class="muted">Embedded system applications including sensor data procesing, serial communication and test interface design in the context of navigation systems.</div>
+      </li>
+      <li>
+        <strong>Engineering Intern, ASELSAN</strong> — (Jun 24, 2024 – Jul 22, 2024)
+        <div class="muted">Embedded software application development regarding MEMS sensor data processing and digital communication protocols.</div>
+      </li>
+      <li>
+        <strong>Engineering Intern, HIDROKONTROL</strong> — (Jun 19, 2023 – Jul 21, 2023)
+        <div class="muted">Automation applications and software/hardware implementations of hydraulic-electronic integrated systems using PLC.</div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- Education -->
+  <section id="education" class="container section">
+    <h2>Education</h2>
+    <ul class="list">
+      <li>
+        <strong>B.Sc., Electrical and Electronics Engineering</strong> — Bilkent University (2021 – Present)
+        <div class="muted">Completed elective coursework with a primary focus on machine learning and signal processing.</div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- Undergraduate Work -->
+  <section id="ugwork" class="container section">
+    <h2>Undergraduate Work</h2>
+    
+    <div id="categories" class="accordion"></div>
+  </section>
+
+  <footer class="container footer">
+    <small>© <span id="year"></span> Eray Gündoğdu</small>
+  </footer>
+
+  <!-- Data before behavior -->
+  <script src="works.js?v=6"></script>
+  <script src="app.js?v=6"></script>
+</body>
+</html>

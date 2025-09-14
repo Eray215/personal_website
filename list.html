@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Documents — Subtitle</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="container section">
+    <h2 id="heading">Documents</h2>
+    <p class="muted" id="breadcrumbs"></p>
+    <div id="docs" class="docs-list"></div>
+  </main>
+
+  <script src="works.js?v=2"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const catKey = params.get('cat');
+    const subKey = params.get('sub');
+
+    const cat = (window.WORKS?.categories || []).find(c => c.key === catKey);
+    const sub = cat ? (cat.subtitles || []).find(s => s.key === subKey) : null;
+
+    const heading = document.getElementById('heading');
+    const crumbs  = document.getElementById('breadcrumbs');
+    const docsEl  = document.getElementById('docs');
+
+    if (!cat || !sub) {
+      heading.textContent = "Not found";
+    } else {
+      heading.textContent = sub.title;
+      crumbs.textContent  = `${cat.title} ▸ ${sub.title}`;
+      const items = sub.items || [];
+      docsEl.innerHTML = items.length ? items.map(it => `
+        <article class="doc-card">
+          <div class="doc-main">
+            <h3>📄 <a href="${it.file}" target="_blank" rel="noopener">${it.title}</a></h3>
+            ${it.desc ? `<p class="muted">${it.desc}</p>` : ``}
+          </div>
+          <div class="doc-actions">
+            <a class="btn" href="${it.file}" target="_blank" rel="noopener">Open </a>
+            <a class="btn" href="${it.file}" download>Download</a>
+          </div>
+        </article>
+      `).join("") : '<p class="muted">No documents yet.</p>';
+    }
+  </script>
+</body>
+</html>

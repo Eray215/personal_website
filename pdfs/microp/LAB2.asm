@@ -1,0 +1,496 @@
+ORG 0000H
+LJMP MAIN_CODE_CODE
+ORG 000BH
+LJMP TIMER_0
+ORG 001BH
+LJMP T1_1
+ORG 0030H
+MAIN_CODE_CODE:
+ACALL CONFİG_LCD
+CLR A
+MOV R2,#2; thıs instruction is for duty cycle
+WRITING_F: ;subroutine for writing f on keyboard
+MOV A,#'f'
+ACALL SEND_DATA
+MOV A,#'='
+ACALL SEND_DATA
+CLR A
+BACK_F: ACALL KEYBOARD
+ACALL SEND_DATA
+ANL A,#0FH
+PUSH A; saving lower nibble
+INC R1; 
+CJNE R1,#3,BACK_F
+;WRITING 'HZ' on lcd
+MOV A,#'H'
+ACALL SEND_DATA
+MOV A,#'Z'
+ACALL SEND_DATA
+
+WRITING_SECOND_LINE:
+; second line for lcd
+MOV A,#0C0H
+ACALL SEND_COMMAND
+MOV A,#'D'
+ACALL SEND_DATA
+MOV A,#'='
+ACALL SEND_DATA
+CLR A
+BACK_D:
+DEC R2
+ACALL KEYBOARD
+ACALL SEND_DATA
+MOV B,#10; looking for decimal
+ANL A,#0FH; getting the lowe nibble
+PUSH A
+MOV A,R2
+MUL AB
+MOV B,A
+POP A; getting back lower nibb
+MUL AB
+ADD A,R5
+MOV R5,A
+CJNE R2,#0,BACK_D
+MOV A,#'%'
+ACALL SEND_DATA
+
+; conversion of values to hexadecimal from R4
+DATA_ENT:
+	MOV DPTR,#DECIMALS;POINTING AT DECIMALS
+	CLR C
+	CLR A
+INPUT_TO_HEX: ; Subroutine for converting ınput to hex
+	    CLR C
+            MOVC A,@A+DPTR
+            POP B
+            MUL AB
+            INC DPTR
+            ADD A,R4
+            MOV R4,A
+            CLR A
+            DJNZ R1,INPUT_TO_HEX
+
+; Waveform 1 set to timer 0
+MOV R3,#0E8H
+MOV R2,#03H
+
+CLR C
+; Dıvıdıng by 1000
+BACK: MOV A,R3
+SUBB A,R4
+PUSH A
+MOV R3,A ;storing in R3
+JNC CONT1
+MOV A, R2
+SUBB A,#00H
+MOV R2,A
+CONT1:
+MOV A, R6
+ADDC A, #0
+MOV R6, A
+INC R7
+DEC R2
+JZ BACK
+CLR A
+CJNE A, 4, $+3
+JNC BACK
+MOV B, #100
+MUL AB
+MOV R3, A
+MOV R2, B
+
+; DIVIDING BY 1000
+RET_1: MOV A,R3
+SUBB A,R4
+PUSH A
+MOV R3,A
+JNC CONT_2
+MOV A, R2
+SUBB A,#00H
+MOV R2,A
+CONT_2:
+MOV A,60H
+ADD A,#1 
+MOV 60H,A
+MOV A,61H
+ADDC A,#0
+MOV 61H,A
+POP A
+CJNE R2,#0,RET_1
+CJNE A,4,$+3
+JNC RET_1
+MOV R0,#60H
+CJNE @R0,#89,$+3
+JC CONT_3
+
+;ADDING 1 TO NUMBER
+MOV A, R6    ; Move the value in R6 into the accumulator
+ADD A, R7    ; Add the value in R7 to the accumulator
+INC A        ; Increment the accumulator
+MOV R7, A    ; Move the result from the accumulator into R7
+CLR C        ; Clear the carry flag
+MOV A, R6    ; Move the value in R6 into the accumulator
+ADDC A, #0   ; Add 0 to the accumulator with carry
+MOV R6, A    ; Move the result from the accumulator into R6
+
+
+CONT_3:
+CLR C
+; FOR TIMER 1 WAVEFORM 1
+PUSH 5; SAVİNG THE DUTY CYCLE VALUE
+MOV A,R5
+MOV B,#10
+DIV AB
+MOV R5,A
+MOV R0,#40H
+MOV R1,#41H
+ACALL MUL_DIV; SUBROUTINE FOR CALCULATION
+ACALL SUBS
+MOV R0,#42H
+MOV R1,#43H
+MOV A, R5
+SUBB A,#10  
+CPL A
+İNC A
+MOV R5,A
+ACALL MUL_DIV
+ACALL SUBS
+
+; WAVEFORM 2 TIMER 1
+
+POP 5
+CJNE R4,#85,$+3; 
+JNC RET_3
+MOV A, R4
+MOV B,#3
+MUL AB
+MOV R4,A
+SJMP SECOND_WAVEFORM
+RET_3:
+MOV R4,#255
+
+
+; DIVIDING BY 1000
+SECOND_WAVEFORM:
+MOV R3,#0E8H
+MOV R2,#03H
+MOV R6,#00H
+MOV R7,#00H
+MOV 60H,#00H
+MOV 61H,#00H
+CLR C
+; DIVIDING BY 1000
+RET_7: MOV A, R3   
+SUBB A, R4  
+JNC SKIP_6 
+PUSH A      ; Push the result onto the stack
+MOV A, R4   ; Move the value in R4 into the accumulator
+ADD A, #0   ; Add 0 to the accumulator
+MOV R3, A   
+SJMP CONT_5
+SKIP_6:
+MOV R3, A   ; Move the result from the accumulator into R3
+CONT_5:
+NOP        ; No operation (placeholder for future code)
+MOV A,R7
+ADD A,#1 
+MOV R7,A
+MOV A,R6
+ADDC A,#0
+MOV R6,A
+POP A
+
+CJNE R2,#0,RET_7
+CJNE A,4,$+3
+JNC RET_7
+
+MOV B,#100
+MUL AB
+MOV R3,A
+MOV R2,B
+
+; DIVIDING BY 1000
+MOV 60H,#0
+RET_9: MOV A,R3
+SUBB A,R4
+PUSH A
+MOV R3,A
+JNC NEXT_11
+MOV A, R2
+SUBB A,#00H
+MOV R2,A
+NEXT_11:
+MOV A,60H
+ADD A,#1 
+MOV 60H,A
+MOV A,61H
+ADDC A,#0
+MOV 61H,A
+POP A
+CJNE R2,#0,RET_9
+CJNE A,4,$+3
+JNC RET_9
+MOV R0,#60H
+CJNE @R0,#89,$+3
+JC CONTINUE
+
+;ADDING 1 AGAIN
+MOV A, R6    ; Move the value in R6 into the accumulator
+ADD A, R7    ; Add the value in R7 to the accumulator
+INC A        ; Increment the accumulator
+MOV R7, A    ; Move the result from the accumulator into R7
+CLR C        ; Clear the carry flag
+MOV A, R6    ; Move the value in R6 into the accumulator
+ADDC A, #0   ; Add 0 to the accumulator with carry
+MOV R6, A    ; Move the result from the accumulator into R6
+CONTINUE:
+INC R7       ; Increment the value in R7 by 1
+MOV A, R6    ; Move the value in R6 into the accumulator
+ADD A, #0    ; Add 0 to the accumulator
+MOV R6, A    ; Move the result from the accumulator into R6
+CLR C        ; Clear the carry flag
+
+; DIVIDING BY D/2 DUTY CYCLE
+MOV A,R5
+MOV B,#2
+DİV AB
+MOV R5,A
+MOV R0,#50H
+MOV R1,#51H
+ACALL MUL_DIV
+ACALL SUBS
+
+CLR C
+MOV A,#98
+SUBB A,R5
+MOV R5,A
+MOV R0,#52H
+MOV R1,#53H
+ACALL MUL_DIV
+ACALL SUBS
+
+MOV A,#100
+MOV B,#9
+MOV TMOD,#11H
+SETB TF0
+SETB TF1
+DEC A
+MOV IE,#10001010B; ENABLE TİMER 0,1
+SJMP $
+
+; MULTIPLICATIN OF 16 BIT AND 8 BIT TO R0 AND R1
+MUL_DIV:
+MOV A, R7    ; Move the value in R7 into the accumulator
+MOV B, R5    ; Move the value in R5 into the B register
+MUL AB       ; Multiply A by B, with the result in AB
+MOV @R0, A   ; Move the lower byte of the result to the address in R0
+INC R0       ; Increment the value in R0 by 1
+MOV @R0, B   ; Move the higher byte of the result to the address in R0
+MOV A, R6    ; Move the value in R6 into the accumulator
+MOV B, R5    ; Move the value in R5 into the B register
+MUL AB       ; Multiply A by B, with the result in AB
+ADD A, @R1   ; Add the lower byte of the result to the value at the address in R1
+MOV @R1, A   ; Move the result to the address in R1
+RET         ; Return from the subroutine
+
+
+; SUBSTRACTING FROM FFFF
+SUBS:
+CLR C
+MOV A,#0FFH
+SUBB A,@R0
+MOV @R0,A
+MOV A,#0FFH
+SUBB A,@R1
+MOV @R1,A
+RET
+
+CONFİG_LCD: ;THIS SUBROUTINE SENDS THE INITIALIZATION COMMANDS TO THE LCD
+MOV A,#38H ;TWO LINES, 5X7 MATRIX
+ACALL SEND_COMMAND
+MOV A,#0FH ;DISPLAY ON, CURSOR BLINKING
+ACALL SEND_COMMAND
+MOV A,#06H ;INCREMENT CURSOR (SHIFT CURSOR TO RIGHT)
+ACALL SEND_COMMAND
+MOV A,#01H ;CLEAR DISPLAY SCREEN
+ACALL SEND_COMMAND
+MOV A,#80H ;FORCE CURSOR TO BEGINNING OF THE FIRST LINE
+ACALL SEND_COMMAND
+RET
+
+;P1.0-P1.7 ARE CONNECTED TO LCD DATA PINS D0-D7
+;P3.5 IS CONNECTED TO RS
+;P3.6 IS CONNECTED TO R/W
+;P3.7 IS CONNECTED TO E
+
+SEND_COMMAND: ;THIS  SUBROUTINE IS FOR SENDING THE COMMANDS TO LCD
+MOV P1,A ;THE COMMAND IS STORED IN A, SEND IT TO LCD
+CLR P3.5 ;RS=0 BEFORE SENDING COMMAND
+CLR P3.6 ;R/W=0 TO WRITE
+SETB P3.7 ;SEND A HIGH TO LOW SIGNAL TO ENABLE PIN
+ACALL DELAY
+CLR P3.7
+RET
+
+SEND_DATA: ;THIS  SUBROUTINE IS FOR SENDING THE DATA TO BE DISPLAYED
+MOV P1,A ;SEND THE DATA STORED IN A TO LCD
+SETB P3.5 ;RS=1 BEFORE SENDING DATA
+CLR P3.6 ;R/W=0 TO WRITE
+SETB P3.7 ;SEND A HIGH TO LOW SIGNAL TO ENABLE PIN
+ACALL DELAY
+CLR P3.7
+RET
+
+DELAY: ;A SHORT DELAY SUBROUTINE
+PUSH 0
+PUSH 1
+MOV R0,#50
+DELAY_OUTER_LOOP:
+MOV R1,#255
+DJNZ R1,$
+DJNZ R0,DELAY_OUTER_LOOP
+POP 1
+POP 0
+RET
+
+KEYBOARD: ;TAKES THE KEY PRESSED FROM THE KEYBOARD AND PUTS İT TO A
+	MOV	P0, #0FFH	;MAKES P0 İNPUT
+K1:
+	MOV	P2, #0	;GROUND ALL ROWS
+	MOV	A, P0
+	ANL	A, #00001111B
+	CJNE	A, #00001111B, K1
+K2:
+	ACALL	DELAY
+	MOV	A, P0
+	ANL	A, #00001111B
+	CJNE	A, #00001111B, KB_OVER
+	SJMP	K2
+KB_OVER:
+	ACALL DELAY
+	MOV	A, P0
+	ANL	A, #00001111B
+	CJNE	A, #00001111B, KB_OVER1
+	SJMP	K2
+KB_OVER1:
+	MOV	P2, #11111110B
+	MOV	A, P0
+	ANL	A, #00001111B
+	CJNE	A, #00001111B, ROW_0
+	MOV	P2, #11111101B
+	MOV	A, P0
+	ANL	A, #00001111B
+	CJNE	A, #00001111B, ROW_1
+	MOV	P2, #11111011B
+	MOV	A, P0
+	ANL	A, #00001111B
+	CJNE	A, #00001111B, ROW_2
+	MOV	P2, #11110111B
+	MOV	A, P0
+	ANL	A, #00001111B
+	CJNE	A, #00001111B, ROW_3
+	LJMP	K2
+ROW_0:
+	MOV	DPTR, #KCODE0
+	SJMP	KB_FIND
+ROW_1:
+	MOV	DPTR, #KCODE1
+	SJMP	KB_FIND
+ROW_2:
+	MOV	DPTR, #KCODE2
+	SJMP	KB_FIND
+ROW_3:
+	MOV	DPTR, #KCODE3
+KB_FIND:
+	RRC	A
+	JNC	KB_MATCH
+	İNC	DPTR
+	SJMP	KB_FIND
+KB_MATCH:
+	CLR	A
+	MOVC	A, @A+DPTR; GET ASCII CODE FROM THE TABLE 
+	RET
+DIVISON:
+	CLR OV
+	CLR C
+DIVCONT: DIV AB;
+	MOV A,B
+	CJNE A,#0,FINISH_DIV;CHECKİNG THE REMAIN_CODE_CODEDE İS EQUALS TO ZERO
+FULL_DIV:SETB C
+FINISH_DIV:
+	CLR A
+RET
+
+; INTERRUPT FOR TIMER0
+TIMER_0:
+PUSH B
+CLR TR0
+DEC A
+INC 20H
+PUSH 0
+MOV R0,#20H
+CJNE @R0,#150,LED_PART
+İNC R0
+MOV 20H,#1
+İNC 21H
+CJNE @R0,#18,LED_PART
+MOV 21H,#1
+CPL P2.5
+LED_PART:
+POP 0
+JNZ T0_2
+MOV A,#75
+CPL P2.6
+T0_2:
+JB P2.6,T0_1
+MOV TH0,43H
+MOV TL0,42H
+SETB TR0
+SJMP BACK_T0
+T0_1:
+MOV TH0,41H
+MOV TL0,40H
+SETB TR0
+BACK_T0:
+CLR C
+POP B
+RETI
+
+; INTERRUPT FOR TIMER1
+T1_1:
+CLR TR1
+CLR C
+DEC B
+JB P2.7, CONT_T1
+MOV TH1,53H
+MOV TL1,52H
+SETB TR1
+SJMP BACK_T1
+CONT_T1:
+MOV TH1,51H
+MOV TL1,50H
+BACK_T1:
+SETB TR1
+XCH A,B
+JNZ CONT_TIMERS
+CPL P2.7
+CJNE R4,#240,$+3
+JC NEXT_LOAD_T1
+MOV A,#8
+SJMP CONT_TIMERS
+NEXT_LOAD_T1:
+MOV A,#9
+CONT_TIMERS:
+MOV R7, B
+MOV B,A
+MOV A,R7
+CLR C
+RETI
+
+;ASCII LOOK-UP TABLE
+KCODE0:	DB	'1', '2', '3', 'A'
+KCODE1:	DB	'4', '5', '6', 'B'
+KCODE2:	DB	'7', '8', '9', 'C'
+KCODE3:	DB	'*', '0', '#', 'D'
+DECIMALS: DB 1,10,100
+END

@@ -1,0 +1,244 @@
+ORG 0000h
+
+acall CONFIGURE_LCD
+clr a
+mov dptr,#MYSTRING
+
+DATA_LOOP:
+movc a,@a+dptr
+jz KEYBOARD_A
+acall SEND_DATA
+clr a
+inc dptr
+sjmp DATA_LOOP
+
+KEYBOARD_A:
+acall KEYBOARD
+cjne A, #'A', NEXT
+mov dptr,#OUTPUT
+clr a
+NEXT:acall SEND_DATA
+      PUSH A
+      INC R2
+sjmp KEYBOARD_A
+
+INPUT_ENTERED:
+movc a, @a+dptr
+jz DECIMAL_POINTER
+acall SEND_DATA
+clr a
+inc dptr
+sjmp INPUT_ENTERED
+
+DECIMAL_POINTER:
+	Mov dptr,#Decimal
+Convert_DEC_TO_HEX:POP B
+            ANL B,#0FH
+            MOVC A,@A+DPTR
+            MUL AB
+            INC DPTR
+            ADD A,R4
+            MOV R4,A
+            CLR A
+            DJNZ R2,Convert_DEC_TO_HEX
+
+
+
+MOV DPTR,#table
+MOV R0 ,#30H; Prime numbers fully divide will be stored in 30h
+CLR A
+MOV B,R4
+BACK:
+CLR A
+MOVC A,@A+DPTR;get the prime into a
+XCH A,B;Get prime to B 
+PUSH B;Store the prime in B
+MOV A,R4
+DIV AB;Divide N by the first pirme
+XCH A,B;Get remainder rin a
+JNZ NOTDIVISABLE
+POP B
+MOV R7,DPL
+CJNE R7,#0,SUB
+JZ HERE
+INC DPTR
+
+NOTDIVISABLE:INC DPTR
+SJMP BACK
+
+HERE:
+MOVC A,@A+DPTR
+XCH A,B
+PUSH B
+MOV A,R4
+PUSH A
+DIV AB
+POP B
+POP B
+DEC B
+MUL AB
+MOV R0,A
+INC DPTR
+SJMP BACK
+
+
+SUB:MOVC A,@A+DPTR
+XCH A,B
+MOV A,R0
+PUSH B
+DIV AB
+POP B
+DEC B
+MUL AB
+MOV R0,A
+INC DPTR
+SJMP BACK
+
+
+
+Convert_ASCII:
+	    CLR A
+	    MOV A,R0
+	    MOV B, #10
+	    DIV AB
+	    ORL B,#30h
+	    PUSH B
+	    INC R2
+	    CJNE A,#10,$+3
+	    JC END_CONVERT_ASCII
+	    MOV R0,A
+	    JNC Convert_ASCII
+END_CONVERT_ASCII:
+	    ORL A,#30h
+	    INC R2
+	    PUSH A
+FINAL_RESULT:
+	POP A
+	acall SEND_DATA
+	clr A
+	DJNZ R2, FINAL_RESULT
+sjmp $
+
+
+
+
+CONFIGURE_LCD: ;THIS SUBROUTINE SENDS THE INITIALIZATION COMMANDS TO THE LCD
+mov a,#38H ;TWO LINES, 5X7 MATRIX
+acall SEND_COMMAND
+mov a,#0FH ;DISPLAY ON, CURSOR BLINKING
+acall SEND_COMMAND
+mov a,#06H ;INCREMENT CURSOR (SHIFT CURSOR TO RIGHT)
+acall SEND_COMMAND
+mov a,#01H ;CLEAR DISPLAY SCREEN
+acall SEND_COMMAND
+mov a,#80H ;FORCE CURSOR TO BEGINNING OF THE FIRST LINE
+acall SEND_COMMAND
+ret
+
+
+;P1.0-P1.7 ARE CONNECTED TO LCD DATA PINS D0-D7
+;P3.5 IS CONNECTED TO RS
+;P3.6 IS CONNECTED TO R/W
+;P3.7 IS CONNECTED TO E
+
+SEND_COMMAND: ;THIS  SUBROUTINE IS FOR SENDING THE COMMANDS TO LCD
+mov p1,a ;THE COMMAND IS STORED IN A, SEND IT TO LCD
+clr p3.5 ;RS=0 BEFORE SENDING COMMAND
+clr p3.6 ;R/W=0 TO WRITE
+setb p3.7 ;SEND A HIGH TO LOW SIGNAL TO ENABLE PIN
+acall DELAY
+clr p3.7
+ret
+
+
+SEND_DATA: ;THIS  SUBROUTINE IS FOR SENDING THE DATA TO BE DISPLAYED
+mov p1,a ;SEND THE DATA STORED IN A TO LCD
+setb p3.5 ;RS=1 BEFORE SENDING DATA
+clr p3.6 ;R/W=0 TO WRITE
+setb p3.7 ;SEND A HIGH TO LOW SIGNAL TO ENABLE PIN
+acall DELAY
+clr p3.7
+ret
+
+
+DELAY: ;A SHORT DELAY SUBROUTINE
+push 0
+push 1
+mov r0,#50
+DELAY_OUTER_LOOP:
+mov r1,#255
+djnz r1,$
+djnz r0,DELAY_OUTER_LOOP
+pop 1
+pop 0
+ret
+
+KEYBOARD: ;takes the key pressed from the keyboard and puts it to A
+	mov	P0, #0ffh	;makes P0 input
+K1:
+	mov	P2, #0	;ground all rows
+	mov	A, P0
+	anl	A, #00001111B
+	cjne	A, #00001111B, K1
+K2:
+	acall	DELAY
+	mov	A, P0
+	anl	A, #00001111B
+	cjne	A, #00001111B, KB_OVER
+	sjmp	K2
+KB_OVER:
+	acall DELAY
+	mov	A, P0
+	anl	A, #00001111B
+	cjne	A, #00001111B, KB_OVER1
+	sjmp	K2
+KB_OVER1:
+	mov	P2, #11111110B
+	mov	A, P0
+	anl	A, #00001111B
+	cjne	A, #00001111B, ROW_0
+	mov	P2, #11111101B
+	mov	A, P0
+	anl	A, #00001111B
+	cjne	A, #00001111B, ROW_1
+	mov	P2, #11111011B
+	mov	A, P0
+	anl	A, #00001111B
+	cjne	A, #00001111B, ROW_2
+	mov	P2, #11110111B
+	mov	A, P0
+	anl	A, #00001111B
+	cjne	A, #00001111B, ROW_3
+	ljmp	K2
+	
+ROW_0:
+	mov	DPTR, #KCODE0
+	sjmp	KB_FIND
+ROW_1:
+	mov	DPTR, #KCODE1
+	sjmp	KB_FIND
+ROW_2:
+	mov	DPTR, #KCODE2
+	sjmp	KB_FIND
+ROW_3:
+	mov	DPTR, #KCODE3
+KB_FIND:
+	rrc	A
+	jnc	KB_MATCH
+	inc	DPTR
+	sjmp	KB_FIND
+KB_MATCH:
+	clr	A
+	movc	A, @A+DPTR; get ASCII code from the table 
+	ret
+ORG 0300H
+;ASCII look-up table 
+KCODE0:	DB	'1', '2', '3', 'A'
+KCODE1:	DB	'4', '5', '6', 'B'
+KCODE2:	DB	'7', '8', '9', 'C'
+KCODE3:	DB	'*', '0', '#', 'D'
+Decimal: DB 1,10,100
+MYSTRING: DB 'PHI(',0
+OUTPUT: DB ')=',0
+
+table:	DB 2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251

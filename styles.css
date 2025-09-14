@@ -1,0 +1,60 @@
+:root{
+  --bg:#0b0c10; --card:#121418; --muted:#aab1c0; --text:#e7ecf3;
+  --accent:#6ee7b7; --border:#1f232c; --link:#9bd4ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font:16px/1.6 system-ui, Segoe UI, Inter, Roboto, Times}
+a{color:var(--link); text-decoration:none}
+a:hover{text-decoration:underline}
+.container{max-width:1100px; margin:0 auto; padding:0 20px}
+
+/* nav */
+.nav-wrap{border-bottom:1px solid var(--border); background:#0c0f14cc; backdrop-filter: blur(6px); position:sticky; top:0; z-index:10}
+.nav{display:flex; align-items:center; justify-content:space-between; padding:14px 0}
+.brand{font-weight:700; color:var(--text)}
+.nav-links a{margin-left:18px; color:var(--muted)}
+.nav-links a:hover{color:var(--text)}
+
+/* hero */
+.hero{display:grid; grid-template-columns:160px 1fr; gap:24px; align-items:center; padding:28px 0}
+.avatar{width:160px; height:160px; object-fit:cover; border-radius:8px; border:1px solid var(--border); box-shadow:0 10px 24px rgba(0,0,0,.35)}
+.hero-right h1{margin:0 0 6px}
+.muted{color:var(--muted)}
+.contact{list-style:none; padding:0; margin:10px 0 0}
+.contact li{margin:4px 0}
+
+/* sections */
+.section{padding:30px 0}
+h2{margin:0 0 10px}
+.list{padding-left:18px}
+
+/* accordion (Undergraduate Work) */
+.accordion{display:grid; gap:12px}
+.acc-item{border:1px solid var(--border); border-radius:12px; background:var(--card)}
+.acc-head{display:flex; justify-content:space-between; align-items:center; padding:12px 14px; cursor:pointer}
+.acc-head h3{margin:0; font-size:18px}
+.acc-body{display:none; border-top:1px solid var(--border)}
+.acc-body-inner{padding:12px 14px}
+.subtitle{display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:#11151b; margin:8px 0}
+.subtitle a{color:var(--text); text-decoration:none}
+.subtitle a:hover{text-decoration:underline}
+
+/* buttons */
+.btn{display:inline-block; border:1px solid var(--border); padding:8px 12px; border-radius:10px; color:var(--text); background:#11151b}
+.btn:hover{background:#171b22}
+
+/* docs list (list.html) */
+.docs-list{display:grid; gap:12px; margin-top:12px}
+.doc-card{display:flex; justify-content:space-between; gap:12px; align-items:flex-start; border:1px solid var(--border); background:var(--card); border-radius:12px; padding:12px 14px}
+.doc-main h3{margin:0 0 6px}
+.doc-actions{display:flex; gap:8px}
+
+/* footer */
+.footer{padding:24px 0 56px; color:var(--muted); border-top:1px solid var(--border); margin-top:24px}
+
+/* responsive */
+@media (max-width:800px){
+  .hero{grid-template-columns:1fr}
+  .avatar{width:120px; height:120px}
+  .doc-card{flex-direction:column; align-items:stretch}
+}

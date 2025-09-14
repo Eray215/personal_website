@@ -1,0 +1,191 @@
+#include <MKL25Z4.H>
+#include <stdio.h>
+#include <math.h>
+#include "utils.h"
+
+int control_ = 0;
+long int res_;
+int i = 0;
+int t;
+int d;
+char amplitude_0lifier_[16];
+int coefficients_ = 0;
+int ab[] = {0,0,0};
+static float table_[128];
+int count;
+char button_=1;
+float amplitude_0;
+float amplitude_1;
+char print_list[]= {'0','1','2','3','4','5','6','7','8','9'};
+int eray_g;
+void LaunchADC(void);
+void LaunchDAC(void);
+void saw(void);
+void square_wave(void);
+void sinusoidal_wave(float sine[]);
+void SysTick_Handler(void) ;
+
+
+int main (void)
+{
+		LCD_init(); 
+	LaunchADC(); 
+	LaunchDAC(); 
+	__disable_irq();
+	SIM->SCGC5 |= 0x200; 
+
+	
+PORTA->PCR[1]|=0x00100; //interrupt
+PORTA->PCR[1]|=0x00003;
+PTA->PDDR&=~0x0002;
+	SysTick->LOAD = 2400000;
+		SysTick->CTRL = 3;
+	__enable_irq();
+		for (i = 0; i <128; i++) {
+   table_[i]=(sinf(2*3.1416/128*i));  //interrupt
+	if( table_[i]<0){
+	table_[i]=0;
+	}
+ }
+while(1){   // wait until unterrupt
+
+
+
+
+while(1){ // for sawtooth wave
+	
+
+	
+	Delay(30);
+saw();
+if(!(GPIOA->PDIR & (1UL << 1)))break;
+	
+}
+
+while(1){ // for sin wave
+
+	
+
+sinusoidal_wave(table_);
+if(!(GPIOA->PDIR & (1UL << 1)))break;
+
+}
+while(1){ //for square wave
+	
+
+
+	
+	Delay(30);
+square_wave();
+if(!(GPIOA->PDIR & (1UL << 1)))break;
+}
+
+}
+}
+
+
+void delay_1(int n) 
+{
+	int i;
+	int j;
+	for(i = 0 ; i < n; i++)
+	for (j = 0; j < 7; j++) {}
+}
+
+void SysTick_Handler(void) {
+		i = 0;
+	
+		ADC0->SC1[0] = 0; 
+		while(!(ADC0->SC1[0] & 0x80)) { } 
+		res_ = ADC0->R[0]; 
+		eray_g=4095-res_;
+res_ = (4095-res_)/12.3;
+		
+		amplitude_0 = res_;
+		if ( amplitude_0 == amplitude_1)
+		{
+		}
+		else{
+		amplitude_1 = amplitude_0;
+
+
+	}
+	clear_lcd();
+	print_fnc("FREQUENCY: 620Hz");
+		LCD_command(0xC0);
+	print_fnc("AMPLITUDE: ");
+
+int res_1;
+res_1=0;
+
+int signal_1;
+	int signal_2;
+		int signal_3;
+
+
+res_1=res_;
+
+signal_1 = res_1 / 100;
+res_1 -= signal_1 * 100;
+signal_2 = res_1 / 10;
+signal_3 = res_1 - (signal_2*10);
+
+LCD_data(signal_1+0x30);
+LCD_data('.');
+LCD_data(signal_2+0x30);
+LCD_data(signal_3+0x30);
+LCD_data('V');
+
+}
+
+void LaunchDAC(void) {
+SIM->SCGC6 |= 0x80000000; 
+DAC0->C1 = 0; 
+DAC0->C0 = 0x80 | 0x20; 
+}
+void LaunchADC(void)
+{
+	SIM->SCGC5 |= 0x2000; 
+	PORTE->PCR[20] = 0; 
+	SIM->SCGC6 |= 0x8000000; 
+	ADC0->SC2 &= ~0x40;
+	
+	ADC0->CFG1 = 0x40 | 0x10 | 0x04 | 0x00;
+}
+
+void sinusoidal_wave(float sine[]){
+
+for(int i=0;i<128;i+=2){
+
+
+	DAC0->DAT[0].DATL = ((int)(eray_g*sine[i]))&(0xff);  
+  DAC0->DAT[0].DATH = ((int)(eray_g*sine[i]) >> 8)&(0x0f);
+	Delay(17);
+	
+}}
+
+void saw(void){
+	for(int i=0;i<0x1000;i+=0x0020){
+	DAC0->DAT[0].DATL =(i*eray_g/0xfff)&0xff;
+DAC0->DAT[0].DATH =((i>>8)*eray_g/0xfff)&0x0f;
+	
+	Delay(1);
+
+
+}}
+void square_wave(void){
+		for(int i=0;i<256;i+=2){
+	DAC0->DAT[0].DATL=eray_g&0xff; 
+			
+DAC0->DAT[0].DATH=(eray_g>>8)&0x0f;
+	
+	Delay(7);
+}
+			for(int i=0;i<256;i+=2){
+	DAC0->DAT[0].DATL=0;
+DAC0->DAT[0].DATH=0;
+	
+	Delay(6);
+}
+
+}
